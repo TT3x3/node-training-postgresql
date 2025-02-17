@@ -1,6 +1,7 @@
 require("dotenv").config()
 const http = require("http")
 const AppDataSource = require("./db")
+const { err500, idErr400 } = require("./errorHandle");
 
 function isUndefined (value) {
   return value === undefined
@@ -38,12 +39,7 @@ const requestListener = async (req, res) => {
       }))
       res.end()
     } catch (error) {
-      res.writeHead(500, headers)
-      res.write(JSON.stringify({
-        status: "error",
-        message: "伺服器錯誤"
-      }))
-      res.end()
+      err500(res);
     }
   } else if (req.url === "/api/credit-package" && req.method === "POST") {
     req.on("end", async () => {
@@ -88,36 +84,18 @@ const requestListener = async (req, res) => {
         }))
         res.end()
       } catch (error) {
-        console.error(error)
-        res.writeHead(500, headers)
-        res.write(JSON.stringify({
-          status: "error",
-          message: "伺服器錯誤"
-        }))
-        res.end()
+        err500(res);
       }
     })
   } else if (req.url.startsWith("/api/credit-package/") && req.method === "DELETE") {
     try {
       const packageId = req.url.split("/").pop()
       if (isUndefined(packageId) || isNotValidString(packageId)) {
-        res.writeHead(400, headers)
-        res.write(JSON.stringify({
-          status: "failed",
-          message: "ID錯誤"
-        }))
-        res.end()
-        return
+        idErr400(res);
       }
       const result = await AppDataSource.getRepository("CreditPackage").delete(packageId)
       if (result.affected === 0) {
-        res.writeHead(400, headers)
-        res.write(JSON.stringify({
-          status: "failed",
-          message: "ID錯誤"
-        }))
-        res.end()
-        return
+        idErr400(res);
       }
       res.writeHead(200, headers)
       res.write(JSON.stringify({
@@ -125,13 +103,7 @@ const requestListener = async (req, res) => {
       }))
       res.end()
     } catch (error) {
-      console.error(error)
-      res.writeHead(500, headers)
-      res.write(JSON.stringify({
-        status: "error",
-        message: "伺服器錯誤"
-      }))
-      res.end()
+      err500(res);
     }
   }else if(req.url === "/api/coaches/skill" && req.method === "GET") {
     try {
@@ -145,12 +117,7 @@ const requestListener = async (req, res) => {
       }))
       res.end()
     } catch (error) {
-      res.writeHead(500, headers)
-      res.write(JSON.stringify({
-        status: "error",
-        message: "伺服器錯誤"
-      }))
-      res.end()
+      err500(res);
     }
   } else if (req.url === "/api/coaches/skill" && req.method === "POST") {
     req.on("end", async () => {
@@ -191,36 +158,18 @@ const requestListener = async (req, res) => {
         }))
         res.end()
       } catch (error) {
-        console.error(error)
-        res.writeHead(500, headers)
-        res.write(JSON.stringify({
-          status: "error",
-          message: "伺服器錯誤"
-        }))
-        res.end()
+        err500(res);
       }
     })
   } else if (req.url.startsWith("/api/coaches/skill/") && req.method === "DELETE") {
     try {
       const skillId = req.url.split("/").pop();
       if (isNotValidString(skillId)) {
-        res.writeHead(400, headers)
-        res.write(JSON.stringify({
-          status: "failed",
-          message: "ID錯誤"
-        }))
-        res.end()
-        return
+        idErr400(res);
       }
       const result = await AppDataSource.getRepository("Skill").delete(skillId)
       if (result.affected === 0) {
-        res.writeHead(400, headers)
-        res.write(JSON.stringify({
-          status: "failed",
-          message: "ID錯誤"
-        }))
-        res.end()
-        return
+        idErr400(res);
       }
       res.writeHead(200, headers)
       res.write(JSON.stringify({
@@ -228,13 +177,7 @@ const requestListener = async (req, res) => {
       }))
       res.end()
     } catch (error) {
-      console.error(error)
-      res.writeHead(500, headers)
-      res.write(JSON.stringify({
-        status: "error",
-        message: "伺服器錯誤"
-      }))
-      res.end()
+     err500(res);
     }
   } else if (req.method === "OPTIONS") {
     res.writeHead(200, headers)
