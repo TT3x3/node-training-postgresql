@@ -5,7 +5,6 @@ const err500 = (res) =>{
         "Access-Control-Allow-Methods": "PATCH, POST, GET,OPTIONS,DELETE",
         "Content-Type": "application/json"
     }
-    console.error(error)
     res.writeHead(500, headers)
     res.write(JSON.stringify({
       status: "error",
