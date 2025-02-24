@@ -13,10 +13,10 @@ router.post('/signup', async (req, res, next) => {
     try {
         const { name, email, password } = req.body
         if(isUndefined(name) || isNotValidString(name) || isUndefined(email) || isNotValidString(email) || isUndefined(password)){
-            err400_isNotValid(res)
+          err400_isNotValid(res)
         }
         if(!isValidPassword(password)){
-            err400_msg(res,"密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字")
+          err400_msg(res,"密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字")
         }
         const userRepo = dataSource.getRepository("User");
         const findUser = await userRepo.findOne({
@@ -25,15 +25,15 @@ router.post('/signup', async (req, res, next) => {
             }
           });
         if(findUser){
-            err409_msg(res,"Email已被使用")
+          err409_msg(res,"Email已被使用")
         }
         
         const hashPassword = await bcrypt.hash(password, saltRounds);
         const newUser = userRepo.create({
-            name,
-            password:hashPassword,
-            email,
-            role:"USER"
+          name,
+          password:hashPassword,
+          email,
+          role:"USER"
         });
         const result = await userRepo.save(newUser);
 
@@ -41,6 +41,7 @@ router.post('/signup', async (req, res, next) => {
           user:result.id,
           name: result.name
       })
+      
     } catch (error) {
      logger.error(error)
      next(error)

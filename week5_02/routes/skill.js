@@ -13,6 +13,7 @@ router.get('/', async (req, res, next) => {
           select: ["id", "name"]
         })
         success200(res,data)
+        
       } catch (error) {
         logger.error(error)
         next(error)
@@ -24,7 +25,7 @@ router.post('/', async (req, res, next) => {
     try {
         const { name } = req.body;
         if (isUndefined(name) || isNotValidString(name)) {
-            err400_isNotValid(res)
+          err400_isNotValid(res)
         }
         const skillRepo = dataSource.getRepository("Skill")
         const findSkill = await skillRepo.find({
@@ -40,6 +41,7 @@ router.post('/', async (req, res, next) => {
         })
         const result = await skillRepo.save(newSkill)
         success200(res,result)
+
       } catch (error) {
         logger.error(error)
         next(error)
@@ -58,6 +60,7 @@ router.delete('/:skillId', async (req, res, next) => {
           err400_idErr(res)
         }
         success200(res,[])
+
       } catch (error) {
         logger.error(error)
         next(error)

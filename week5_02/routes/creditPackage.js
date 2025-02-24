@@ -28,9 +28,9 @@ router.post('/', async (req, res, next) => {
         }
         const creditPackageRepo = dataSource.getRepository("CreditPackage");
         const findCreditPackage = await creditPackageRepo.find({
-            where: {
-                name:name
-            }
+          where: {
+            name:name
+          }
         })
     
         if (findCreditPackage.length > 0) {
@@ -47,6 +47,7 @@ router.post('/', async (req, res, next) => {
             status: "success",
             data: result
         })
+        
       } catch (error) {
         logger.error(error)
         next(error)
@@ -58,14 +59,15 @@ router.delete('/:packageId', async (req, res, next) => {
     try {
         const { packageId } = req.params;
         if (isUndefined(packageId) || isNotValidString(packageId)) {
-            err409_duplicateData(res)
+          err409_duplicateData(res)
         }
 
         const result = await dataSource.getRepository("CreditPackage").delete(packageId)
         if (result.affected === 0) {
-            err400_idErr(res)
+          err400_idErr(res)
         }
         success200(res,[])
+
       } catch (error) {
         logger.error(error)
         next(error)
