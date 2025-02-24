@@ -4,7 +4,7 @@ const router = express.Router()
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('CreditPackage')
 const { isNotValidInteger, isNotValidString, isUndefined } = require('../utils/validUtils');
-const { err400_isNotValid, err400_idErr, success200, err409_duplicateData} = require('../utils/response');
+const { err400_isNotValid, err400_idErr, success200, success201, err409_duplicateData} = require('../utils/response');
 
 // 取得所有課堂資料
 router.get('/', async (req, res, next) => {
@@ -36,14 +36,14 @@ router.post('/', async (req, res, next) => {
         if (findCreditPackage.length > 0) {
             err409_duplicateData(res)
           }
-          const newPackage = await creditPackageRepo.create({
+          const newPackage = creditPackageRepo.create({
             name,
             credit_amount,
             price
         })
 
         const result = await creditPackageRepo.save(newPackage);
-        success200(res,{
+        success201(res,{
             status: "success",
             data: result
         })

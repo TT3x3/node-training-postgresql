@@ -4,7 +4,7 @@ const router = express.Router()
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('Skill')
 const { isNotValidString, isUndefined } = require('../utils/validUtils');
-const { err400_isNotValid, err400_idErr, success200, err409_duplicateData } = require('../utils/response');
+const { err400_isNotValid, err400_idErr, success200, success201, err409_duplicateData, success201 } = require('../utils/response');
 
 // 取得所有教練技能
 router.get('/', async (req, res, next) => {
@@ -40,7 +40,7 @@ router.post('/', async (req, res, next) => {
           name
         })
         const result = await skillRepo.save(newSkill)
-        success200(res,result)
+        success201(res,result)
 
       } catch (error) {
         logger.error(error)
