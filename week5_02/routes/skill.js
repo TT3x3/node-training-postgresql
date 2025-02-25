@@ -4,7 +4,7 @@ const router = express.Router()
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('Skill')
 const { isNotValidString, isUndefined } = require('../utils/validUtils');
-const { err400_isNotValid, err400_idErr, success200, success201, err409_duplicateData, success201 } = require('../utils/response');
+const { err400_isNotValid, err400_idErr, success200, success201, err409_duplicateData } = require('../utils/response');
 
 // 取得所有教練技能
 router.get('/', async (req, res, next) => {
