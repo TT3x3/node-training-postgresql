@@ -8,6 +8,7 @@ const creditPackageRouter = require('./routes/creditPackage')
 const skillRouter = require("./routes/skill")
 const userRouter = require("./routes/users")
 const adminRouter = require("./routes/admin")
+const courseRouter = require("./routes/course")
 
 require('events').EventEmitter.defaultMaxListeners = 20;
 
@@ -35,6 +36,7 @@ app.use('/api/coaches/skill', skillRouter)
 app.use('/api/users', userRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/coaches', adminRouter)
+app.use('/api/course', courseRouter)
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
