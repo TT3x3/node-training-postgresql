@@ -12,8 +12,8 @@ const auth = require('../middlewares/auth')({
 const isCoach = require('../middlewares/isCoach')
 
 const { isNotValidInteger, isNotValidString, isUndefined } = require('../utils/validUtils');
-const { err400_isNotValid,err400_userNotExist,  err400_msg,err409_msg, success201 } = require('../utils/response');
-
+const appError = require("../utils/appError")
+const appSuccess = require("../utils/appSuccess")
 
 router.post('/coaches/courses', auth, isCoach, async (req, res, next) => {
   try {
@@ -30,7 +30,7 @@ router.post('/coaches/courses', auth, isCoach, async (req, res, next) => {
       isUndefined(maxParticipants) || isNotValidInteger(maxParticipants) ||
       isUndefined(meetingUrl) || isNotValidString(meetingUrl) || !meetingUrl.startsWith('https')) {
       logger.warn('欄位未填寫正確')
-      err400_isNotValid(res)
+      next(appError(400, "欄位未正確填寫"))
 
     }
     const courseRepo = dataSource.getRepository('Course')
@@ -49,7 +49,7 @@ router.post('/coaches/courses', auth, isCoach, async (req, res, next) => {
       where: { id: savedCourse.id }
     })
 
-    success201(res,course)
+    appSuccess(res, 201, course)
 
   } catch (error) {
     logger.error(error)
@@ -74,7 +74,7 @@ router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) =
       isUndefined(maxParticipants) || isNotValidInteger(maxParticipants) ||
       isUndefined(meetingUrl) || isNotValidString(meetingUrl) || !meetingUrl.startsWith('https')) {
       logger.warn('欄位未填寫正確')
-      err400_isNotValid(res)
+      next(appError(400, "欄位未正確填寫"))
 
     }
     const courseRepo = dataSource.getRepository('Course')
@@ -83,7 +83,7 @@ router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) =
     })
     if (!existingCourse) {
       logger.warn('課程不存在')
-      err400_idErr(res, "課程不存在")
+      next(appError(400, "課程不存在"))
 
     }
     const updateCourse = await courseRepo.update({
@@ -99,14 +99,14 @@ router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) =
     })
     if (updateCourse.affected === 0) {
       logger.warn('更新課程失敗')
-      err400_idErr(res, "更新課程失敗")
+      next(appError(400, "更新課程失敗"))
 
     }
     const savedCourse = await courseRepo.findOne({
       where: { id: courseId }
     })
     
-    success201(res, savedCourse)
+    appSuccess(res, 201, savedCourse)
 
   } catch (error) {
     logger.error(error)
@@ -120,11 +120,11 @@ router.post('/coaches/:userId', async (req, res, next) => {
     const { experience_years: experienceYears, description, profile_image_url: profileImageUrl = null } = req.body
     if (isUndefined(experienceYears) || isNotValidInteger(experienceYears) || isUndefined(description) || isNotValidString(description)) {
       logger.warn('欄位未填寫正確')
-      err400_isNotValid(res)
+      next(appError(400, "欄位未正確填寫"))
     }
     if (profileImageUrl && !isNotValidString(profileImageUrl) && !profileImageUrl.startsWith('https')) {
       logger.warn('大頭貼網址錯誤')
-      err400_isNotValid(res)
+      next(appError(400, "大頭貼網址錯誤"))
     }
     const userRepository = dataSource.getRepository('User')
     const existingUser = await userRepository.findOne({
@@ -133,11 +133,11 @@ router.post('/coaches/:userId', async (req, res, next) => {
     })
     if (!existingUser) {
       logger.warn('使用者不存在')
-      err400_userNotExist(res)
+      next(appError(400,"使用者不存在"))
 
     } else if (existingUser.role === 'COACH') {
       logger.warn('使用者已經是教練')
-      err409_msg(res, "使用者已是教練")
+      next(appError(409,"使用者已是教練"))
     }
     const coachRepo = dataSource.getRepository('Coach')
     const newCoach = coachRepo.create({
@@ -154,7 +154,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
     })
     if (updatedUser.affected === 0) {
       logger.warn('更新使用者失敗')
-      err400_msg(res, "更新使用者失敗")
+      next(appError(400,"更新使用者失敗"))
     }
     const savedCoach = await coachRepo.save(newCoach)
     const savedUser = await userRepository.findOne({
@@ -162,10 +162,11 @@ router.post('/coaches/:userId', async (req, res, next) => {
       where: { id: userId }
     })
 
-    success201(res, {
+    appSuccess(res, 201, {
       user: savedUser,
       coach: savedCoach
     })
+
 
   } catch (error) {
     logger.error(error)

@@ -4,7 +4,8 @@ const router = express.Router()
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('Skill')
 const { isNotValidString, isUndefined } = require('../utils/validUtils');
-const { err400_isNotValid, err400_idErr, success200, success201, err409_duplicateData } = require('../utils/response');
+const appError = require("../utils/appError")
+const appSuccess = require("../utils/appSuccess")
 
 // 取得所有教練技能
 router.get('/', async (req, res, next) => {
@@ -12,8 +13,7 @@ router.get('/', async (req, res, next) => {
         const data = await dataSource.getRepository("Skill").find({
           select: ["id", "name"]
         })
-        success200(res,data)
-        
+        appSuccess(res, 200, data)
       } catch (error) {
         logger.error(error)
         next(error)
@@ -25,7 +25,7 @@ router.post('/', async (req, res, next) => {
     try {
         const { name } = req.body;
         if (isUndefined(name) || isNotValidString(name)) {
-          err400_isNotValid(res)
+          next(appError(400, "欄位未正確填寫"))
         }
         const skillRepo = dataSource.getRepository("Skill")
         const findSkill = await skillRepo.find({
@@ -34,14 +34,13 @@ router.post('/', async (req, res, next) => {
           }
         })
         if (findSkill.length > 0) {
-          err409_duplicateData(res)
+          next(appError(409, "資料重複"))
         }
         const newSkill = skillRepo.create({
           name
         })
         const result = await skillRepo.save(newSkill)
-        success201(res,result)
-
+          appSuccess(res, 201, result)
       } catch (error) {
         logger.error(error)
         next(error)
@@ -53,13 +52,13 @@ router.delete('/:skillId', async (req, res, next) => {
     try {
         const { skillId } = req.params
         if ( isNotValidString(skillId) ) {
-          err400_idErr(res)
+          next(appError(400, "ID錯誤"))
         }
         const result = await dataSource.getRepository("Skill").delete(skillId)
         if (result.affected === 0) {
-          err400_idErr(res)
+          next(appError(400, "ID錯誤"))
         }
-        success200(res,[])
+        appSuccess(res, 200, null)
 
       } catch (error) {
         logger.error(error)

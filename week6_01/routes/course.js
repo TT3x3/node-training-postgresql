@@ -11,8 +11,8 @@ const auth = require('../middlewares/auth')({
   logger
 })
 
-const { err400_idErr, err400_msg, success200, success201 } = require('../utils/response');
-
+const appError = require("../utils/appError")
+const appSuccess = require("../utils/appSuccess")
 
 router.get('/', async (req, res, next) => {
   try {
@@ -37,7 +37,7 @@ router.get('/', async (req, res, next) => {
       }
     })
 
-    success200(res, courses.map((course) => {
+    appSuccess(res, 200, courses.map((course) => {
       return {
         id: course.id,
         name: course.name,
@@ -68,7 +68,7 @@ router.post('/:courseId', auth, async (req, res, next) => {
       }
     })
     if (!course) {
-      err400_idErr(res)
+      next(appError(400, "ID錯誤"))
     }
     const creditPurchaseRepo = dataSource.getRepository('CreditPurchase')
     const courseBookingRepo = dataSource.getRepository('CourseBooking')
@@ -79,7 +79,7 @@ router.post('/:courseId', auth, async (req, res, next) => {
       }
     })
     if (userCourseBooking) {
-      err400_msg(res, "已經報名過此課程")
+      next(appError(400, "已報名過此課程"))
     }
     const userCredit = await creditPurchaseRepo.sum('purchased_credits', {
       user_id: id
@@ -97,11 +97,9 @@ router.post('/:courseId', auth, async (req, res, next) => {
       }
     })
     if (userUsedCredit >= userCredit) {
-      err400_msg(res,"已無可使用堂數")
-
+      next(appError(400, "已無可使用堂數"))
     } else if (courseBookingCount >= course.max_participants) {
-      err400_msg(res,"已達最大參加人數，無法參加")
-
+      next(appError(400, "已達最大參加人數，無法參加"))
     }
     const newCourseBooking = await courseBookingRepo.create({
       user_id: id,
@@ -109,7 +107,7 @@ router.post('/:courseId', auth, async (req, res, next) => {
     })
     await courseBookingRepo.save(newCourseBooking)
 
-    success201(res, null)
+    appSuccess(res, 201, null)
 
   } catch (error) {
     logger.error(error)
@@ -131,7 +129,7 @@ router.delete('/:courseId', auth, async (req, res, next) => {
       }
     })
     if (!userCourseBooking) {
-      err400_idErr(res)
+      next(appError(400, "ID錯誤"))
     }
     const updateResult = await courseBookingRepo.update(
       {
@@ -144,10 +142,10 @@ router.delete('/:courseId', auth, async (req, res, next) => {
       }
     )
     if (updateResult.affected === 0) {
-      err400_msg(res,"取消失敗")
+      next(appError(400, "取消失敗"))
     }
 
-    success200(res, null)
+    appSuccess(res, 200, null)
 
   } catch (error) {
     logger.error(error)

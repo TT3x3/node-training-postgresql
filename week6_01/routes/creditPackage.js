@@ -11,8 +11,8 @@ const auth = require('../middlewares/auth')({
 })
 
 const { isNotValidInteger, isNotValidString, isUndefined } = require('../utils/validUtils');
-const { err400_isNotValid, err400_idErr, err409_duplicateData, success200 } = require('../utils/response');
-
+const appError = require("../utils/appError")
+const appSuccess = require("../utils/appSuccess")
 
 // 取得組合包
 router.get('/', async (req, res, next) => {
@@ -21,7 +21,7 @@ router.get('/', async (req, res, next) => {
       select: ['id', 'name', 'credit_amount', 'price']
     })
     
-    success200(res, creditPackage)
+    appSuccess(res, 200, creditPackage)
 
   } catch (error) {
     logger.error(error)
@@ -36,8 +36,7 @@ router.post('/', async (req, res, next) => {
     if (isUndefined(name) || isNotValidString(name) ||
       isUndefined(creditAmount) || isNotValidInteger(creditAmount) ||
             isUndefined(price) || isNotValidInteger(price)) {
-
-      err400_isNotValid(res)
+      next(appError(400, "欄位未填寫正確"))
     }
     const creditPackageRepo = dataSource.getRepository('CreditPackage')
     const existCreditPackage = await creditPackageRepo.find({
@@ -46,16 +45,17 @@ router.post('/', async (req, res, next) => {
       }
     })
     if (existCreditPackage.length > 0) {
-      err409_duplicateData(res)
+      next(appError(409, "資料重複"))
     }
-    const newCreditPurchase = await creditPackageRepo.create({
+    const newCreditPurchase = creditPackageRepo.create({
       name,
       credit_amount: creditAmount,
       price
     })
     const result = await creditPackageRepo.save(newCreditPurchase)
     
-    success200(res, result)
+    appSuccess(res, 200, result)
+
 
   } catch (error) {
     logger.error(error)
@@ -75,7 +75,7 @@ router.post('/:creditPackageId', auth, async (req, res, next) => {
       }
     })
     if (!creditPackage) {
-      err400_idErr(res)
+      next(appError(400, "ID錯誤"))
     }
     const creditPurchaseRepo = dataSource.getRepository('CreditPurchase')
     const newPurchase = await creditPurchaseRepo.create({
@@ -87,7 +87,7 @@ router.post('/:creditPackageId', auth, async (req, res, next) => {
     })
     await creditPurchaseRepo.save(newPurchase)
 
-    success200(res, null)
+    appSuccess(res, 200, null)
 
   } catch (error) {
     logger.error(error)
@@ -100,13 +100,13 @@ router.delete('/:creditPackageId', async (req, res, next) => {
   try {
     const { creditPackageId } = req.params
     if (isUndefined(creditPackageId) || isNotValidString(creditPackageId)) {
-      err400_isNotValid(res)
+      next(appError(400, "欄位未填寫正確"))
     }
     const result = await dataSource.getRepository('CreditPackage').delete(creditPackageId)
     if (result.affected === 0) {
-      err400_idErr(res)
+      next(appError(400, "ID錯誤"))
     }
-    success200(res, result)
+    appSuccess(res, 200, result)
 
   } catch (error) {
     logger.error(error)

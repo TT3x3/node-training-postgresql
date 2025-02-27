@@ -10,9 +10,17 @@ const jwt = require('jsonwebtoken')
 module.exports = (payload, secret, option = {}) => new Promise((resolve, reject) => {
   jwt.sign(payload, secret, option, (err, token) => {
     if (err) {
-      reject(err)
-      return
+      // reject(err)
+      switch (err.name) {
+        case 'TokenExpiredError':
+          reject(appError(401, 'Token 已過期'))
+          break
+        default:
+          reject(appError(401, '無效的 token'))
+          break
+      }
+    } else {
+      resolve(token)
     }
-    resolve(token)
   })
 })
