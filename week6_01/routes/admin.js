@@ -11,7 +11,7 @@ const auth = require('../middlewares/auth')({
 })
 const isCoach = require('../middlewares/isCoach')
 
-const { isNotValidInteger, isNotValidString, isUndefined } = require('../utils/validUtils');
+const { isInvalidString, isInvalidInteger } = require('../utils/validUtils');
 const appError = require("../utils/appError")
 const appSuccess = require("../utils/appSuccess")
 
@@ -22,17 +22,11 @@ router.post('/coaches/courses', auth, isCoach, async (req, res, next) => {
       skill_id: skillId, name, description, start_at: startAt, end_at: endAt,
       max_participants: maxParticipants, meeting_url: meetingUrl
     } = req.body
-    if (isUndefined(skillId) || isNotValidString(skillId) ||
-      isUndefined(name) || isNotValidString(name) ||
-      isUndefined(description) || isNotValidString(description) ||
-      isUndefined(startAt) || isNotValidString(startAt) ||
-      isUndefined(endAt) || isNotValidString(endAt) ||
-      isUndefined(maxParticipants) || isNotValidInteger(maxParticipants) ||
-      isUndefined(meetingUrl) || isNotValidString(meetingUrl) || !meetingUrl.startsWith('https')) {
+    if ( isInvalidString(skillId) || isInvalidString(name) || isInvalidString(description) || isInvalidString(startAt) || isInvalidString(endAt) || isInvalidInteger(maxParticipants) || isInvalidString(meetingUrl) || !meetingUrl.startsWith('https')) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未正確填寫"))
-
     }
+
     const courseRepo = dataSource.getRepository('Course')
     const newCourse = courseRepo.create({
       user_id: id,
@@ -65,17 +59,9 @@ router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) =
       skill_id: skillId, name, description, start_at: startAt, end_at: endAt,
       max_participants: maxParticipants, meeting_url: meetingUrl
     } = req.body
-    if (isNotValidString(courseId) ||
-      isUndefined(skillId) || isNotValidString(skillId) ||
-      isUndefined(name) || isNotValidString(name) ||
-      isUndefined(description) || isNotValidString(description) ||
-      isUndefined(startAt) || isNotValidString(startAt) ||
-      isUndefined(endAt) || isNotValidString(endAt) ||
-      isUndefined(maxParticipants) || isNotValidInteger(maxParticipants) ||
-      isUndefined(meetingUrl) || isNotValidString(meetingUrl) || !meetingUrl.startsWith('https')) {
+    if (isInvalidString(courseId) || isInvalidString(skillId) || isInvalidString(name) || isInvalidString(description) || isInvalidString(startAt) || isInvalidString(endAt) || isInvalidInteger(maxParticipants) || isInvalidString(meetingUrl) || !meetingUrl.startsWith('https')) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未正確填寫"))
-
     }
     const courseRepo = dataSource.getRepository('Course')
     const existingCourse = await courseRepo.findOne({
@@ -118,11 +104,11 @@ router.post('/coaches/:userId', async (req, res, next) => {
   try {
     const { userId } = req.params
     const { experience_years: experienceYears, description, profile_image_url: profileImageUrl = null } = req.body
-    if (isUndefined(experienceYears) || isNotValidInteger(experienceYears) || isUndefined(description) || isNotValidString(description)) {
+    if ( isInvalidInteger(experienceYears) || isInvalidString(description) ) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未正確填寫"))
     }
-    if (profileImageUrl && !isNotValidString(profileImageUrl) && !profileImageUrl.startsWith('https')) {
+    if ( !isInvalidString(profileImageUrl) && !profileImageUrl.startsWith('https')) {
       logger.warn('大頭貼網址錯誤')
       next(appError(400, "大頭貼網址錯誤"))
     }

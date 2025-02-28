@@ -10,11 +10,11 @@ const auth = require('../middlewares/auth')({
   logger
 })
 
-const { isNotValidInteger, isNotValidString, isUndefined } = require('../utils/validUtils');
+const { isInvalidString, isInvalidInteger } = require('../utils/validUtils');
 const appError = require("../utils/appError")
 const appSuccess = require("../utils/appSuccess")
 
-// 取得組合包
+// 取得組合方案
 router.get('/', async (req, res, next) => {
   try {
     const creditPackage = await dataSource.getRepository('CreditPackage').find({
@@ -29,13 +29,11 @@ router.get('/', async (req, res, next) => {
   }
 })
 
-// 新增組合包
+// 新增組合方案
 router.post('/', async (req, res, next) => {
   try {
     const { name, credit_amount: creditAmount, price } = req.body
-    if (isUndefined(name) || isNotValidString(name) ||
-      isUndefined(creditAmount) || isNotValidInteger(creditAmount) ||
-            isUndefined(price) || isNotValidInteger(price)) {
+    if ( isInvalidString(name) || isInvalidInteger(creditAmount) || isInvalidInteger(price) ){
       next(appError(400, "欄位未填寫正確"))
     }
     const creditPackageRepo = dataSource.getRepository('CreditPackage')
@@ -63,7 +61,7 @@ router.post('/', async (req, res, next) => {
   }
 })
 
-// 登入後購買組合包
+// 登入後購買方案
 router.post('/:creditPackageId', auth, async (req, res, next) => {
   try {
     const { id } = req.user
@@ -95,11 +93,11 @@ router.post('/:creditPackageId', auth, async (req, res, next) => {
   }
 })
 
-// 刪除組合包
+// 刪除組合方案
 router.delete('/:creditPackageId', async (req, res, next) => {
   try {
     const { creditPackageId } = req.params
-    if (isUndefined(creditPackageId) || isNotValidString(creditPackageId)) {
+    if ( isInvalidString(creditPackageId) ) {
       next(appError(400, "欄位未填寫正確"))
     }
     const result = await dataSource.getRepository('CreditPackage').delete(creditPackageId)

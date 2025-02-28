@@ -3,7 +3,7 @@ const express = require('express')
 const router = express.Router()
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('Skill')
-const { isNotValidString, isUndefined } = require('../utils/validUtils');
+const { isInvalidString } = require('../utils/validUtils');
 const appError = require("../utils/appError")
 const appSuccess = require("../utils/appSuccess")
 
@@ -24,7 +24,7 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
     try {
         const { name } = req.body;
-        if (isUndefined(name) || isNotValidString(name)) {
+        if ( isInvalidString(name) ) {
           next(appError(400, "欄位未正確填寫"))
         }
         const skillRepo = dataSource.getRepository("Skill")
@@ -51,7 +51,7 @@ router.post('/', async (req, res, next) => {
 router.delete('/:skillId', async (req, res, next) => {
     try {
         const { skillId } = req.params
-        if ( isNotValidString(skillId) ) {
+        if ( isInvalidString(skillId) ) {
           next(appError(400, "ID錯誤"))
         }
         const result = await dataSource.getRepository("Skill").delete(skillId)

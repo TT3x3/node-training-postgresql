@@ -12,20 +12,19 @@ const auth = require('../middlewares/auth')({
   logger
 })
 
-const { isNotValidString, isUndefined } = require('../utils/validUtils');
+const { isValidPassword, isValidName, isInvalidString } = require('../utils/validUtils');
 const appError = require("../utils/appError")
 const appSuccess = require('../utils/appSuccess')
 
 // 註冊
 router.post('/signup', async (req, res, next) => {
   try {
-    const passwordPattern = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}/
     const { name, email, password } = req.body
-    if (isUndefined(name) || isNotValidString(name) || isUndefined(email) || isNotValidString(email) || isUndefined(password) || isNotValidString(password)) {
+    if (isInvalidString(name) || isInvalidString(email) || isInvalidString(password)) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未填寫正確"))
     }
-    if (!passwordPattern.test(password)) {
+    if (!isValidPassword(password)) {
       logger.warn('建立使用者錯誤: 密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字')
       next(appError(400, "建立使用者錯誤: 密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"))
     }
@@ -69,13 +68,12 @@ router.post('/signup', async (req, res, next) => {
 // 登入
 router.post('/login', async (req, res, next) => {
   try {
-    const passwordPattern = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}/
     const { email, password } = req.body
-    if (isUndefined(email) || isNotValidString(email) || isUndefined(password) || isNotValidString(password)) {
+    if ( isInvalidString(email) || isInvalidString(password) ) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未填寫正確"))
     }
-    if (!passwordPattern.test(password)) {
+    if (!isValidPassword(password)) {
       logger.warn('密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字')
       next(appError(400, "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"))
     }
@@ -116,12 +114,16 @@ router.post('/login', async (req, res, next) => {
 router.get('/profile', auth, async (req, res, next) => {
   try {
     const { id } = req.user
+    if ( isInvalidString(id) ) {
+      logger.warn('欄位未填寫正確')
+      next(appError(400, "欄位未填寫正確"))
+    }
     const userRepository = dataSource.getRepository('User')
-    const user = await userRepository.findOne({
+    const findUser = await userRepository.findOne({
       select: ['name', 'email'],
       where: { id }
     })
-    appSuccess(res, 200, { user })
+    appSuccess(res, 200, { findUser })
 
   } catch (error) {
     logger.error('取得使用者資料錯誤:', error)
@@ -134,24 +136,29 @@ router.put('/profile', auth, async (req, res, next) => {
   try {
     const { id } = req.user
     const { name } = req.body
-    if (isUndefined(name) || isNotValidString(name)) {
+    if ( isInvalidString(name)) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未填寫正確"))
-
     }
+
     const userRepository = dataSource.getRepository('User')
-    const user = await userRepository.findOne({
+    const findUser = await userRepository.findOne({
       select: ['name'],
       where: {
         id
       }
     })
-    if (user.name === name) {
+    if (findUser.name === name) {
       next(appError(400, "使用者名稱未變更"))
     }
+    if (!isValidName(name)) {
+      logger.warn('欄位未填寫正確')
+      next(appError(400, "欄位未填寫正確"))
+    }
+
     const updatedResult = await userRepository.update({
       id,
-      name: user.name
+      name: findUser.name
     }, {
       name
     })
