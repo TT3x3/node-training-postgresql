@@ -14,7 +14,7 @@ const { isInvalidString, isInvalidInteger } = require('../utils/validUtils');
 const appError = require("../utils/appError")
 const appSuccess = require("../utils/appSuccess")
 
-// 取得組合方案
+// 取得組合方案列表
 router.get('/', async (req, res, next) => {
   try {
     const creditPackage = await dataSource.getRepository('CreditPackage').find({
@@ -53,7 +53,6 @@ router.post('/', async (req, res, next) => {
     const result = await creditPackageRepo.save(newCreditPurchase)
     
     appSuccess(res, 200, result)
-
 
   } catch (error) {
     logger.error(error)

@@ -56,7 +56,7 @@ router.get('/', async (req, res, next) => {
   }
 })
 
-// 預約課程
+// 報名課程
 router.post('/:courseId', auth, async (req, res, next) => {
   try {
     const { id } = req.user
@@ -129,7 +129,7 @@ router.delete('/:courseId', auth, async (req, res, next) => {
       }
     })
     if (!userCourseBooking) {
-      next(appError(400, "ID錯誤"))
+      next(appError(400, "課程不存在"))
     }
     const updateResult = await courseBookingRepo.update(
       {

@@ -119,11 +119,11 @@ router.get('/profile', auth, async (req, res, next) => {
       next(appError(400, "欄位未填寫正確"))
     }
     const userRepository = dataSource.getRepository('User')
-    const findUser = await userRepository.findOne({
+    const User = await userRepository.findOne({
       select: ['name', 'email'],
       where: { id }
     })
-    appSuccess(res, 200, { findUser })
+    appSuccess(res, 200, { User })
 
   } catch (error) {
     logger.error('取得使用者資料錯誤:', error)
