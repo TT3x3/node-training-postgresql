@@ -26,6 +26,7 @@ router.post('/', async (req, res, next) => {
         const { name } = req.body;
         if ( isInvalidString(name) ) {
           next(appError(400, "欄位未正確填寫"))
+          return
         }
         const skillRepo = dataSource.getRepository("Skill")
         const findSkill = await skillRepo.find({
@@ -35,6 +36,7 @@ router.post('/', async (req, res, next) => {
         })
         if (findSkill.length > 0) {
           next(appError(409, "資料重複"))
+          return
         }
         const newSkill = skillRepo.create({
           name
@@ -53,10 +55,12 @@ router.delete('/:skillId', async (req, res, next) => {
         const { skillId } = req.params
         if ( isInvalidString(skillId) ) {
           next(appError(400, "ID錯誤"))
+          return
         }
         const result = await dataSource.getRepository("Skill").delete(skillId)
         if (result.affected === 0) {
           next(appError(400, "ID錯誤"))
+          return
         }
         appSuccess(res, 200, null)
 

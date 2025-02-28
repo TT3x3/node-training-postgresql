@@ -35,6 +35,7 @@ router.post('/', async (req, res, next) => {
     const { name, credit_amount: creditAmount, price } = req.body
     if ( isInvalidString(name) || isInvalidInteger(creditAmount) || isInvalidInteger(price) ){
       next(appError(400, "欄位未填寫正確"))
+      return
     }
     const creditPackageRepo = dataSource.getRepository('CreditPackage')
     const existCreditPackage = await creditPackageRepo.find({
@@ -44,6 +45,7 @@ router.post('/', async (req, res, next) => {
     })
     if (existCreditPackage.length > 0) {
       next(appError(409, "資料重複"))
+      return
     }
     const newCreditPurchase = creditPackageRepo.create({
       name,
@@ -73,6 +75,7 @@ router.post('/:creditPackageId', auth, async (req, res, next) => {
     })
     if (!creditPackage) {
       next(appError(400, "ID錯誤"))
+      return
     }
     const creditPurchaseRepo = dataSource.getRepository('CreditPurchase')
     const newPurchase = await creditPurchaseRepo.create({
@@ -98,10 +101,12 @@ router.delete('/:creditPackageId', async (req, res, next) => {
     const { creditPackageId } = req.params
     if ( isInvalidString(creditPackageId) ) {
       next(appError(400, "欄位未填寫正確"))
+      return
     }
     const result = await dataSource.getRepository('CreditPackage').delete(creditPackageId)
     if (result.affected === 0) {
       next(appError(400, "ID錯誤"))
+      return
     }
     appSuccess(res, 200, result)
 

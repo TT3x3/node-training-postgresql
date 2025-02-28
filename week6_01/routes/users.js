@@ -23,10 +23,12 @@ router.post('/signup', async (req, res, next) => {
     if (isInvalidString(name) || isInvalidString(email) || isInvalidString(password)) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未填寫正確"))
+      return
     }
     if (!isValidPassword(password)) {
       logger.warn('建立使用者錯誤: 密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字')
       next(appError(400, "建立使用者錯誤: 密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"))
+      return
     }
     const userRepository = dataSource.getRepository('User')
     const findUser = await userRepository.findOne({
@@ -39,6 +41,7 @@ router.post('/signup', async (req, res, next) => {
         status: 'failed',
         message: 'Email 已被使用'
       }))
+      return
     }
     const salt = await bcrypt.genSalt(10)
     const hashPassword = await bcrypt.hash(password, salt)
@@ -72,10 +75,12 @@ router.post('/login', async (req, res, next) => {
     if ( isInvalidString(email) || isInvalidString(password) ) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未填寫正確"))
+      return
     }
     if (!isValidPassword(password)) {
       logger.warn('密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字')
       next(appError(400, "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"))
+      return
     }
     const userRepository = dataSource.getRepository('User')
     const findUser = await userRepository.findOne({
@@ -85,11 +90,13 @@ router.post('/login', async (req, res, next) => {
 
     if (!findUser) {
       next(appError(400, "使用者不存在或密碼輸入錯誤"))
+      return
     }
     logger.info(`使用者資料: ${JSON.stringify(findUser)}`)
     const isMatch = await bcrypt.compare(password, findUser.password)
     if (!isMatch) {
       next(appError(400, "使用者不存在或密碼輸入錯誤"))
+      return
     }
     const token = await generateJWT({
       id: findUser.id
@@ -117,6 +124,7 @@ router.get('/profile', auth, async (req, res, next) => {
     if ( isInvalidString(id) ) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未填寫正確"))
+      return
     }
     const userRepository = dataSource.getRepository('User')
     const User = await userRepository.findOne({
@@ -139,6 +147,7 @@ router.put('/profile', auth, async (req, res, next) => {
     if ( isInvalidString(name)) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未填寫正確"))
+      return
     }
 
     const userRepository = dataSource.getRepository('User')
@@ -150,10 +159,12 @@ router.put('/profile', auth, async (req, res, next) => {
     })
     if (findUser.name === name) {
       next(appError(400, "使用者名稱未變更"))
+      return
     }
     if (!isValidName(name)) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未填寫正確"))
+      return
     }
 
     const updatedResult = await userRepository.update({
@@ -164,6 +175,7 @@ router.put('/profile', auth, async (req, res, next) => {
     })
     if (updatedResult.affected === 0) {
       next(appError(400, "更新使用者資料失敗"))
+      return
     }
     const result = await userRepository.findOne({
       select: ['name'],

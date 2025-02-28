@@ -25,6 +25,7 @@ router.post('/coaches/courses', auth, isCoach, async (req, res, next) => {
     if ( isInvalidString(skillId) || isInvalidString(name) || isInvalidString(description) || isInvalidString(startAt) || isInvalidString(endAt) || isInvalidInteger(maxParticipants) || isInvalidString(meetingUrl) || !meetingUrl.startsWith('https')) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未正確填寫"))
+      return
     }
 
     const courseRepo = dataSource.getRepository('Course')
@@ -62,6 +63,7 @@ router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) =
     if (isInvalidString(courseId) || isInvalidString(skillId) || isInvalidString(name) || isInvalidString(description) || isInvalidString(startAt) || isInvalidString(endAt) || isInvalidInteger(maxParticipants) || isInvalidString(meetingUrl) || !meetingUrl.startsWith('https')) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未正確填寫"))
+      return
     }
     const courseRepo = dataSource.getRepository('Course')
     const existingCourse = await courseRepo.findOne({
@@ -70,7 +72,7 @@ router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) =
     if (!existingCourse) {
       logger.warn('課程不存在')
       next(appError(400, "課程不存在"))
-
+      return
     }
     const updateCourse = await courseRepo.update({
       id: courseId
@@ -86,7 +88,7 @@ router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) =
     if (updateCourse.affected === 0) {
       logger.warn('更新課程失敗')
       next(appError(400, "更新課程失敗"))
-
+      return
     }
     const savedCourse = await courseRepo.findOne({
       where: { id: courseId }
@@ -107,10 +109,12 @@ router.post('/coaches/:userId', async (req, res, next) => {
     if ( isInvalidInteger(experienceYears) || isInvalidString(description) ) {
       logger.warn('欄位未填寫正確')
       next(appError(400, "欄位未正確填寫"))
+      return
     }
     if ( !isInvalidString(profileImageUrl) && !profileImageUrl.startsWith('https')) {
       logger.warn('大頭貼網址錯誤')
       next(appError(400, "大頭貼網址錯誤"))
+      return
     }
     const userRepository = dataSource.getRepository('User')
     const existingUser = await userRepository.findOne({
@@ -120,10 +124,12 @@ router.post('/coaches/:userId', async (req, res, next) => {
     if (!existingUser) {
       logger.warn('使用者不存在')
       next(appError(400,"使用者不存在"))
+      return
 
     } else if (existingUser.role === 'COACH') {
       logger.warn('使用者已經是教練')
       next(appError(409,"使用者已是教練"))
+      return
     }
     const coachRepo = dataSource.getRepository('Coach')
     const newCoach = coachRepo.create({
@@ -141,6 +147,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
     if (updatedUser.affected === 0) {
       logger.warn('更新使用者失敗')
       next(appError(400,"更新使用者失敗"))
+      return
     }
     const savedCoach = await coachRepo.save(newCoach)
     const savedUser = await userRepository.findOne({

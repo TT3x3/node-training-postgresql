@@ -69,6 +69,7 @@ router.post('/:courseId', auth, async (req, res, next) => {
     })
     if (!course) {
       next(appError(400, "ID錯誤"))
+      return
     }
     const creditPurchaseRepo = dataSource.getRepository('CreditPurchase')
     const courseBookingRepo = dataSource.getRepository('CourseBooking')
@@ -80,6 +81,7 @@ router.post('/:courseId', auth, async (req, res, next) => {
     })
     if (userCourseBooking) {
       next(appError(400, "已報名過此課程"))
+      return
     }
     const userCredit = await creditPurchaseRepo.sum('purchased_credits', {
       user_id: id
@@ -98,8 +100,10 @@ router.post('/:courseId', auth, async (req, res, next) => {
     })
     if (userUsedCredit >= userCredit) {
       next(appError(400, "已無可使用堂數"))
+      return
     } else if (courseBookingCount >= course.max_participants) {
       next(appError(400, "已達最大參加人數，無法參加"))
+      return
     }
     const newCourseBooking = await courseBookingRepo.create({
       user_id: id,
@@ -130,6 +134,7 @@ router.delete('/:courseId', auth, async (req, res, next) => {
     })
     if (!userCourseBooking) {
       next(appError(400, "課程不存在"))
+      return
     }
     const updateResult = await courseBookingRepo.update(
       {
@@ -143,6 +148,7 @@ router.delete('/:courseId', auth, async (req, res, next) => {
     )
     if (updateResult.affected === 0) {
       next(appError(400, "取消失敗"))
+      return
     }
 
     appSuccess(res, 200, null)
