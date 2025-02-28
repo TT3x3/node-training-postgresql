@@ -5,7 +5,7 @@ const isValidPassword = (value) => {
 }
 
 const isValidName = (value) => {
-    const namePattern = /^[\u4e00-\u9fa5]{2,10}$/
+    const namePattern = /^(?!\s)[\u4e00-\u9fa5a-zA-Z0-9]{2,10}$/;
     return namePattern.test(value);
 }
 
