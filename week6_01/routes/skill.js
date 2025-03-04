@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const { dataSource } = require("../db/data-source");
 const logger = require("../utils/logger")("Skill");
-const { isInvalidString } = require("../utils/validUtils");
+const { isInvalidString, checkName } = require("../utils/validUtils");
 const appError = require("../utils/appError");
 const appSuccess = require("../utils/appSuccess");
 
@@ -21,12 +21,13 @@ router.get("/", async (req, res, next) => {
 });
 
 // 新增教練技能
-router.post("/", async (req, res, next) => {
+router.post("/", checkName, async (req, res, next) => {
   try {
     const { name } = req.body;
-    if (isInvalidString(name)) {
-      next(appError(400, "欄位未正確填寫"));
-      return;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      next(appError(400, `${errors.array().map(e => e.msg).join(", ")}`));
+      return  
     }
     const skillRepo = dataSource.getRepository("Skill");
     const findSkill = await skillRepo.findOneBy({ name });

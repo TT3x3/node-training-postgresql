@@ -11,44 +11,26 @@ const auth = require("../middlewares/auth")({
   userRepository: dataSource.getRepository("User"), // 連接User資料庫
   logger,
 });
-const { check } = require("express-validator");
-
+const { validationResult } = require("express-validator");
 
 const {
-  isValidPassword,
-  isValidName,
-  isInvalidEmail,
   isInvalidString,
+  checkName,
+  checkEmail,
+  checkPassword
 } = require("../utils/validUtils");
 const appError = require("../utils/appError");
 const appSuccess = require("../utils/appSuccess");
 
 // 註冊
-router.post("/signup", async (req, res, next) => {
+router.post("/signup", checkName, checkEmail, checkPassword, async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+    next(appError(400, `${errors.array().map(e => e.msg).join(", ")}`));
+      return  
+    }
     const { name, email, password } = req.body;
-    if (
-      isInvalidString(name) ||
-      isInvalidString(email) ||
-      isInvalidEmail(email) ||
-      isInvalidString(password)
-    ) {
-      logger.warn("欄位未填寫正確");
-      next(appError(400, "欄位未填寫正確"));
-      return;
-    }
-    if (!isValidPassword(password)) {
-      logger.warn(
-        "建立使用者錯誤: 密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
-      );
-      next(
-        appError(
-          400,
-          "建立使用者錯誤: 密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
-        )
-      );
-      return;
-    }
     const userRepository = dataSource.getRepository("User");
     const findUser = await userRepository.findOne({
       where: { email },
@@ -90,30 +72,9 @@ router.post("/signup", async (req, res, next) => {
 });
 
 // 登入
-router.post("/login", async (req, res, next) => {
+router.post("/login", checkEmail, checkPassword, async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (
-      isInvalidString(email) ||
-      isInvalidEmail(email) ||
-      isInvalidString(password)
-    ) {
-      logger.warn("欄位未填寫正確");
-      next(appError(400, "欄位未填寫正確"));
-      return;
-    }
-    if (!isValidPassword(password)) {
-      logger.warn(
-        "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
-      );
-      next(
-        appError(
-          400,
-          "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
-        )
-      );
-      return;
-    }
     const userRepository = dataSource.getRepository("User");
     const findUser = await userRepository.findOne({
       select: ["id", "name", "password"],
@@ -174,7 +135,7 @@ router.get("/profile", auth, async (req, res, next) => {
 });
 
 // 登入編輯個人資料
-router.put("/profile", auth, async (req, res, next) => {
+router.put("/profile", checkName, auth, async (req, res, next) => {
   try {
     const { id } = req.user;
     const { name } = req.body;
@@ -195,10 +156,10 @@ router.put("/profile", auth, async (req, res, next) => {
       next(appError(400, "使用者名稱未變更"));
       return;
     }
-    if (!isValidName(name)) {
-      logger.warn("欄位未填寫正確");
-      next(appError(400, "欄位未填寫正確"));
-      return;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+    next(appError(400, `${errors.array().map(e => e.msg).join(", ")}`));
+      return  
     }
 
     const updatedResult = await userRepository.update(
