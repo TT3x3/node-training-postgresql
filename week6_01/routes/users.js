@@ -11,11 +11,13 @@ const auth = require("../middlewares/auth")({
   userRepository: dataSource.getRepository("User"), // 連接User資料庫
   logger,
 });
+const { check } = require("express-validator");
+
 
 const {
   isValidPassword,
   isValidName,
-  isCheckEmail,
+  isInvalidEmail,
   isInvalidString,
 } = require("../utils/validUtils");
 const appError = require("../utils/appError");
@@ -28,7 +30,7 @@ router.post("/signup", async (req, res, next) => {
     if (
       isInvalidString(name) ||
       isInvalidString(email) ||
-      isCheckEmail(email) ||
+      isInvalidEmail(email) ||
       isInvalidString(password)
     ) {
       logger.warn("欄位未填寫正確");
@@ -93,7 +95,7 @@ router.post("/login", async (req, res, next) => {
     const { email, password } = req.body;
     if (
       isInvalidString(email) ||
-      isCheckEmail(email) ||
+      isInvalidEmail(email) ||
       isInvalidString(password)
     ) {
       logger.warn("欄位未填寫正確");

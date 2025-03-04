@@ -8,16 +8,14 @@ const isValidName = (value) => {
   return namePattern.test(value);
 };
 
-const isCheckEmail = (value) => {
-  const checkEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-  return checkEmail.test(value);
+const isInvalidEmail = (value) => {
+  const checkEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  return !checkEmail.test(value);
 };
 
 const isInvalidString = (value) => {
   return (
-    value === undefined ||
-    typeof value !== "string" ||
-    value.trim().length === 0
+    value === undefined || typeof value !== "string" || value.trim().length === 0
   );
 };
 
@@ -28,7 +26,7 @@ const isInvalidInteger = (value) => {
 module.exports = {
   isValidPassword,
   isValidName,
-  isCheckEmail,
+  isInvalidEmail,
   isInvalidString,
   isInvalidInteger,
 };
