@@ -1,22 +1,22 @@
-const express = require('express')
-const { IsNull } = require('typeorm')
+const express = require("express");
+const { IsNull } = require("typeorm");
 
-const router = express.Router()
-const config = require('../config/index')
-const { dataSource } = require('../db/data-source')
-const logger = require('../utils/logger')('Course')
-const auth = require('../middlewares/auth')({
-  secret: config.get('secret').jwtSecret,
-  userRepository: dataSource.getRepository('User'),
-  logger
-})
+const router = express.Router();
+const config = require("../config/index");
+const { dataSource } = require("../db/data-source");
+const logger = require("../utils/logger")("Course");
+const auth = require("../middlewares/auth")({
+  secret: config.get("secret").jwtSecret,
+  userRepository: dataSource.getRepository("User"),
+  logger,
+});
 
-const appError = require("../utils/appError")
-const appSuccess = require("../utils/appSuccess")
+const appError = require("../utils/appError");
+const appSuccess = require("../utils/appSuccess");
 
-router.get('/', async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
-    const courses = await dataSource.getRepository('Course').find({
+    const courses = await dataSource.getRepository("Course").find({
       select: {
         id: true,
         name: true,
@@ -25,138 +25,135 @@ router.get('/', async (req, res, next) => {
         end_at: true,
         max_participants: true,
         User: {
-          name: true
+          name: true,
         },
         Skill: {
-          name: true
-        }
+          name: true,
+        },
       },
       relations: {
         User: true,
-        Skill: true
-      }
-    })
+        Skill: true,
+      },
+    });
 
-    appSuccess(res, 200, courses.map((course) => {
-      return {
-        id: course.id,
-        name: course.name,
-        description: course.description,
-        start_at: course.start_at,
-        end_at: course.end_at,
-        max_participants: course.max_participants,
-        coach_name: course.User.name,
-        skill_name: course.Skill.name
-      }
-    }))
-
+    appSuccess(
+      res,
+      200,
+      courses.map((course) => {
+        return {
+          id: course.id,
+          name: course.name,
+          description: course.description,
+          start_at: course.start_at,
+          end_at: course.end_at,
+          max_participants: course.max_participants,
+          coach_name: course.User.name,
+          skill_name: course.Skill.name,
+        };
+      })
+    );
   } catch (error) {
-    logger.error(error)
-    next(error)
+    logger.error(error);
+    next(error);
   }
-})
+});
 
 // 報名課程
-router.post('/:courseId', auth, async (req, res, next) => {
+router.post("/:courseId", auth, async (req, res, next) => {
   try {
-    const { id } = req.user
-    const { courseId } = req.params
-    const courseRepo = dataSource.getRepository('Course')
-    const course = await courseRepo.findOne({
-      where: {
-        id: courseId
-      }
-    })
+    const { id } = req.user;
+    const { courseId } = req.params;
+    const courseRepo = dataSource.getRepository("Course");
+    const course = await courseRepo.findOne({ id: courseId });
     if (!course) {
-      next(appError(400, "ID錯誤"))
-      return
+      next(appError(400, "ID錯誤"));
+      return;
     }
-    const creditPurchaseRepo = dataSource.getRepository('CreditPurchase')
-    const courseBookingRepo = dataSource.getRepository('CourseBooking')
+    const creditPurchaseRepo = dataSource.getRepository("CreditPurchase");
+    const courseBookingRepo = dataSource.getRepository("CourseBooking");
     const userCourseBooking = await courseBookingRepo.findOne({
       where: {
         user_id: id,
-        course_id: courseId
-      }
-    })
+        course_id: courseId,
+      },
+    });
     if (userCourseBooking) {
-      next(appError(400, "已報名過此課程"))
-      return
+      next(appError(400, "已報名過此課程"));
+      return;
     }
-    const userCredit = await creditPurchaseRepo.sum('purchased_credits', {
-      user_id: id
-    })
+    const userCredit = await creditPurchaseRepo.sum("purchased_credits", {
+      user_id: id,
+    });
     const userUsedCredit = await courseBookingRepo.count({
       where: {
         user_id: id,
-        cancelledAt: IsNull()
-      }
-    })
+        cancelledAt: IsNull(),
+      },
+    });
     const courseBookingCount = await courseBookingRepo.count({
       where: {
         course_id: courseId,
-        cancelledAt: IsNull()
-      }
-    })
+        cancelledAt: IsNull(),
+      },
+    });
     if (userUsedCredit >= userCredit) {
-      next(appError(400, "已無可使用堂數"))
-      return
+      next(appError(400, "已無可使用堂數"));
+      return;
     } else if (courseBookingCount >= course.max_participants) {
-      next(appError(400, "已達最大參加人數，無法參加"))
-      return
+      next(appError(400, "已達最大參加人數，無法參加"));
+      return;
     }
     const newCourseBooking = await courseBookingRepo.create({
       user_id: id,
-      course_id: courseId
-    })
-    await courseBookingRepo.save(newCourseBooking)
+      course_id: courseId,
+    });
+    await courseBookingRepo.save(newCourseBooking);
 
-    appSuccess(res, 201, null)
-
+    appSuccess(res, 201, null);
   } catch (error) {
-    logger.error(error)
-    next(error)
+    logger.error(error);
+    next(error);
   }
-})
+});
 
 // 取消預約
-router.delete('/:courseId', auth, async (req, res, next) => {
+router.delete("/:courseId", auth, async (req, res, next) => {
   try {
-    const { id } = req.user
-    const { courseId } = req.params
-    const courseBookingRepo = dataSource.getRepository('CourseBooking')
+    const { id } = req.user;
+    const { courseId } = req.params;
+    const courseBookingRepo = dataSource.getRepository("CourseBooking");
     const userCourseBooking = await courseBookingRepo.findOne({
       where: {
         user_id: id,
         course_id: courseId,
-        cancelledAt: IsNull()
-      }
-    })
+        cancelledAt: IsNull(),
+      },
+    });
     if (!userCourseBooking) {
-      next(appError(400, "課程不存在"))
-      return
+      next(appError(400, "課程不存在"));
+      return;
     }
     const updateResult = await courseBookingRepo.update(
       {
         user_id: id,
         course_id: courseId,
-        cancelledAt: IsNull()
+        cancelledAt: IsNull(),
       },
       {
-        cancelledAt: new Date().toISOString()
+        cancelledAt: new Date().toISOString(),
       }
-    )
+    );
     if (updateResult.affected === 0) {
-      next(appError(400, "取消失敗"))
-      return
+      next(appError(400, "取消失敗"));
+      return;
     }
 
-    appSuccess(res, 200, null)
-
+    appSuccess(res, 200, null);
   } catch (error) {
-    logger.error(error)
-    next(error)
+    logger.error(error);
+    next(error);
   }
-})
+});
 
-module.exports = router
+module.exports = router;
