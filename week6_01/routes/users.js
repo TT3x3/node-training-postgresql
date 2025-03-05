@@ -39,10 +39,7 @@ router.post("/signup", checkName, checkEmail, checkPassword, async (req, res, ne
     if (findUser) {
       logger.warn("建立使用者錯誤: Email 已被使用");
       next(
-        appError(409, {
-          status: "failed",
-          message: "Email 已被使用",
-        })
+        appError(409, "Email 已被使用")
       );
       return;
     }

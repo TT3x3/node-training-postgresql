@@ -15,6 +15,44 @@ const { isInvalidString, isInvalidInteger } = require("../utils/validUtils");
 const appError = require("../utils/appError");
 const appSuccess = require("../utils/appSuccess");
 
+// 取得教練列表
+router.get("/", async (req, res, next) => {
+  try {
+    const { per, page } = req.query;
+    const perPage = parseInt(per);
+    const pageNum = parseInt(page);
+
+    if (
+      isNaN(perPage) ||
+      perPage % 1 !== 0 ||
+      isNaN(pageNum) ||
+      pageNum % 1 !== 0
+    ) {
+      logger.warn("欄位未填寫正確");
+      next(appError(400, "欄位未正確填寫"));
+      return;
+    }
+
+    const newCoach = await dataSource.getRepository("Coach").find({
+      take: perPage,
+      skip: perPage * (pageNum - 1),
+      relations: ["User"],
+    });
+
+    const newData = newCoach.map((data) => {
+      return {
+        id: data.User.id,
+        name: data.User.name,
+      };
+    });
+    appSuccess(res, 200, newData);
+  } catch (error) {
+    logger.error(error);
+    next(error);
+  }
+});
+
+// 新增教練課程
 router.post("/coaches/courses", auth, isCoach, async (req, res, next) => {
   try {
     const { id } = req.user;
@@ -56,14 +94,19 @@ router.post("/coaches/courses", auth, isCoach, async (req, res, next) => {
     const savedCourse = await courseRepo.save(newCourse);
     const course = await courseRepo.findOneBy({ id: savedCourse.id });
 
-    appSuccess(res, 201, course);
+    appSuccess(res, 200, course);
   } catch (error) {
     logger.error(error);
     next(error);
   }
 });
 
-router.put("/coaches/courses/:courseId", auth, isCoach, async (req, res, next) => {
+// 更新教練課程
+router.put(
+  "/coaches/courses/:courseId",
+  auth,
+  isCoach,
+  async (req, res, next) => {
     try {
       const { id } = req.user;
       const { courseId } = req.params;

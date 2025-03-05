@@ -15,26 +15,24 @@ const isInvalidInteger = (value) => {
 const checkName = [
   check("name")
     .notEmpty()
-    .withMessage("名稱不能為空")
-    .withMessage("名稱長度需在 2-10 個字內")
+    .withMessage("欄位未填寫正確")
+    .withMessage("欄位未填寫正確")
     .matches(/^(?!\s)[\u4e00-\u9fa5a-zA-Z0-9]{2,10}$/)
-    .withMessage(
-      "名稱格式不正確，請使用中文字、英文字母或數字，並且不能以空格開頭"
-    ),
+    .withMessage("欄位未填寫正確"),
 ];
 
 const checkEmail = [
   check("email")
-    .notEmpty().withMessage("名稱不能為空")
-    .isEmail().withMessage("Email格式錯誤")
-    .matches(/^[a-zA-Z0-9._-]{4,}@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).withMessage("無效的Email")
+    .notEmpty().withMessage("欄位未填寫正確")
+    .isEmail().withMessage("欄位未填寫正確")
+    .matches(/^[a-zA-Z0-9._-]{4,}@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).withMessage("欄位未填寫正確")
 ];
 
 const checkPassword = [
   check("password")
-  .notEmpty().withMessage("名稱不能為空")
-  .isLength({ min: 8, max: 16 }).withMessage("名稱長度需在 8-16 個字內")
-  .matches(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/).withMessage("需要包含英文數字大小寫"),
+  .notEmpty().withMessage("欄位未填寫正確")
+  .isLength({ min: 8, max: 16 }).withMessage("欄位未填寫正確")
+  .matches(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/).withMessage("欄位未填寫正確"),
 ]
 
 module.exports = {

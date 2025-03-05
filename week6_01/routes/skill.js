@@ -4,6 +4,7 @@ const router = express.Router();
 const { dataSource } = require("../db/data-source");
 const logger = require("../utils/logger")("Skill");
 const { isInvalidString, checkName } = require("../utils/validUtils");
+const { validationResult } = require("express-validator");
 const appError = require("../utils/appError");
 const appSuccess = require("../utils/appSuccess");
 
