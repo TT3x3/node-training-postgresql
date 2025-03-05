@@ -31,6 +31,7 @@ router.post("/:courseId", auth, async (req, res, next) => {
       where: {
         user_id: id,
         course_id: courseId,
+        cancelledAt: IsNull()
       },
     });
     if (userCourseBooking) {
