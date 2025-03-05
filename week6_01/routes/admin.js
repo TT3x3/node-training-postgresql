@@ -52,6 +52,28 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+// 取得教練詳細資訊
+router.get("/coaches/courses", async (req, res, next) => {
+  try {
+    const newCourse = await dataSource.getRepository("Course").find({
+      select: [
+        "user_id",
+        "skill_id",
+        "name",
+        "description",
+        "start_at",
+        "end_at",
+        "max_participants",
+        "meeting_url",
+      ],
+    });
+    appSuccess(res, 200, newCourse);
+  } catch (error) {
+    logger.error(error);
+    next(error);
+  }
+});
+
 // 新增教練課程
 router.post("/coaches/courses", auth, isCoach, async (req, res, next) => {
   try {
@@ -66,6 +88,7 @@ router.post("/coaches/courses", auth, isCoach, async (req, res, next) => {
       meeting_url: meetingUrl,
     } = req.body;
     if (
+      isInvalidString(id) ||
       isInvalidString(skillId) ||
       isInvalidString(name) ||
       isInvalidString(description) ||
