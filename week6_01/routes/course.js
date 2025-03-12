@@ -14,6 +14,52 @@ const auth = require("../middlewares/auth")({
 const appError = require("../utils/appError");
 const appSuccess = require("../utils/appSuccess");
 
+// 取得課程列表
+router.get("/", async (req, res, next) => {
+  try {
+    const courses = await dataSource.getRepository("Course").find({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        start_at: true,
+        end_at: true,
+        max_participants: true,
+        User: {
+          name: true,
+        },
+        Skill: {
+          name: true,
+        },
+      },
+      relations: {
+        User: true,
+        Skill: true,
+      },
+    });
+
+    appSuccess(
+      res,
+      200,
+      courses.map((course) => {
+        return {
+          id: course.id,
+          name: course.name,
+          description: course.description,
+          start_at: course.start_at,
+          end_at: course.end_at,
+          max_participants: course.max_participants,
+          coach_name: course.User.name,
+          skill_name: course.Skill.name,
+        };
+      })
+    );
+  } catch (error) {
+    logger.error(error);
+    next(error);
+  }
+});
+
 // 報名課程
 router.post("/:courseId", auth, async (req, res, next) => {
   try {
